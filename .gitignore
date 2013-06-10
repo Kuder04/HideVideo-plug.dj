@@ -1,11 +1,97 @@
-# Build and Release Folders
-bin/
-bin-debug/
-bin-release/
-
-# Other files and folders
-.settings/
-
-# Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
-# should NOT be excluded as they contain compiler settings and other important
-# information for Eclipse / Flash Builder.
+(function(){
+  var btn = document.createElement('div');
+	
+	//rotate an element
+	function rotate(el, angle)
+	{
+		$(el).css({
+			'-webkit-transform': 'rotate(' + angle + 'deg)',
+			'-moz-transform': 'rotate(' + angle + 'deg)',
+			'-ms-transform': 'rotate(' + angle + 'deg)',
+			'-o-transform': 'rotate(' + angle + 'deg)',
+			'transform': 'rotate(' + angle + 'deg)'});
+	}
+	
+	//change an element's width
+	function changeWidth(selector, diff)
+	{
+		$(selector).width($(selector).width() + diff);
+	}
+	
+	//change an element's left
+	function changeLeft(selector, diff)
+	{
+		$(selector).css({left: (parseInt($(selector).css('left'), 10) + diff) + 'px'});
+	}
+	
+	function toggleVideo() {
+		var pbWidth = $('#playback').width();
+		if (!$('#playback').is(":visible"))
+		{
+			$('#playback').show();
+			//invert the pbWidth so we don't need two copies
+			//of the code that actually changes the width
+			pbWidth = -pbWidth;
+			rotate(btn, 90);
+		}
+		else
+		{
+			$('#playback').hide();
+			rotate(btn, -90);
+		}
+		
+		//easy css width change
+		changeWidth('#chat', pbWidth);
+		changeWidth('#chat-messages', pbWidth);
+		changeWidth('.chat-input', pbWidth);
+		changeWidth('#bottom-chat-line', pbWidth);
+		changeWidth('#chat-header', pbWidth);
+		changeWidth('#top-chat-line', pbWidth);
+		changeWidth('#chat-input-field', pbWidth);
+		
+		//easy css left change
+		changeLeft('#chat-mention-suggestion', -pbWidth);
+		changeLeft('#chat', -pbWidth);
+		
+		//this one's a pain, mod the width in the stylesheet directly
+		$.each(document.styleSheets, function(i, styleSheet) {
+			$.each(styleSheet.cssRules, function(j, rule) {
+				if (rule.selectorText == '.chat-message, .chat-mention, .chat-emote, .chat-skip, .chat-moderation, .chat-system, .chat-update' || rule.selectorText == '.chat-superuser' || rule.selectorText == '.chat-moderator')
+				{
+					rule.style.width = (parseInt(rule.style.width, 10) + pbWidth) + 'px';
+				}
+			})
+		});
+		
+		//pin chat to the bottom
+		$('#chat-messages').scrollTop($("#chat-messages")[0].scrollHeight);
+	}
+	
+	//style our button and rotate it for expand mode
+	$(btn).css({
+		'backgroundColor': '#222',
+		'backgroundImage': 'url(/images/ButtonChatExpand1.png)',
+		'right': '32px',
+		'width': '30px'
+	}).addClass('button-chat-size');
+	rotate(btn, 90);
+	
+	//since we're adding another button next to the input,
+	//we've gotta shrink it
+	changeWidth('.chat-input', -32);
+	changeWidth('#chat-input-field', -32);
+	
+	//add the button
+	$('#chat').append(btn);
+	
+	//when the button is clicked, it toggles the video
+	$(btn).click(toggleVideo);
+	
+	//when chat expanded/contracted, need to keep the button in the right spot
+	$('#button-chat-expand').click(function(){
+		$(btn).css({top: $('#button-chat-collapse').css('top')});
+	});
+	$('#button-chat-collapse').click(function(){
+		$(btn).css({top: $('#button-chat-expand').css('top')});
+	});
+})();
